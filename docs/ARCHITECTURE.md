@@ -1,6 +1,6 @@
 # Satchel — Architecture
 
-> Status: initial design, written 2026-11-11. Interfaces shown here are starting sketches, not final signatures. Expect this document to change as each version is built.
+> Status: initial design, written 2026-11-11; last updated 2026-11-16. Interfaces shown here are starting sketches, not final signatures, except where a section says the part is built. Expect this document to change as each version is built.
 > Related docs: [VISION.md](VISION.md), [ROADMAP.md](ROADMAP.md), [DECISIONS.md](DECISIONS.md), [PROJECT_LOG.md](PROJECT_LOG.md)
 
 ## 1. Goals for the design
@@ -324,7 +324,7 @@ More settings are added when a feature needs them.
 
 ## 10. Proposed package layout
 
-The top level below is the repository root. As of 2026-11-16 the v0 packages exist as empty skeletons (`core`, `providers`, `interface`, `config`, `tracing`, `storage`); the rest are created in their version. Ports are defined in `core` (A-08).
+The top level below is the repository root. As of 2026-11-16, `config` is built and `interface` has the command-line entry point; `core`, `providers`, `tracing` and `storage` exist as empty packages; the rest are created in their version. Ports are defined in `core` (A-08). Progress is tracked in [ROADMAP.md](ROADMAP.md).
 
 ```
 satchel/
@@ -337,7 +337,7 @@ satchel/
 │   ├── permissions/   # tiers, rules, policy
 │   ├── storage/       # sessions
 │   ├── tracing/
-│   ├── config/
+│   ├── config/        # paths, settings, loader
 │   ├── eval/          # runner, metrics, datasets
 │   └── interface/     # cli entry point, terminal UI
 ├── tests/

@@ -1,6 +1,6 @@
 # Satchel — Roadmap
 
-> Status: initial plan, written 2026-11-11. Durations are rough estimates at about 15 hours a week; there is no deadline.
+> Status: initial plan, written 2026-11-11; v0 progress last updated 2026-11-16. Durations are rough estimates at about 15 hours a week; there is no deadline.
 > Related docs: [VISION.md](VISION.md), [ARCHITECTURE.md](ARCHITECTURE.md), [DECISIONS.md](DECISIONS.md), [PROJECT_LOG.md](PROJECT_LOG.md)
 
 Each version ends with something that works and can be shown. "You write" marks the parts Nayan implements by hand; "Claude Code writes" marks supporting work.
@@ -20,7 +20,7 @@ Each version ends with something that works and can be shown. "You write" marks 
 **Goal:** a streaming chat in the terminal that works with Claude and Groq, built on the final module boundaries.
 
 **Scope**
-- Project setup: uv, ruff, pytest, CI, MIT licence, package layout.
+- Project setup: uv, ruff, mypy, pytest, CI, MIT licence, package layout.
 - Neutral message format and the `Provider` port.
 - Anthropic adapter and OpenAI-compatible adapter (Groq), with streaming.
 - Core engine: conversation state, one turn in, events out.
@@ -38,6 +38,30 @@ Each version ends with something that works and can be shown. "You write" marks 
 - A trace file exists for every session.
 
 **You will have learned:** how provider APIs differ, how streaming works, how to draw a boundary between a core and its interface.
+
+### v0 progress
+
+Update this table whenever a step starts or finishes. Each step is done on its own branch (P-08).
+
+| # | Step | Who | Status | Needs first |
+|---|---|---|---|---|
+| 1 | Project setup: uv, ruff, mypy, pytest, CI, package skeleton, boundary test | Claude Code | Done 2026-11-16 | — |
+| 2 | Config loading: XDG paths, `config.toml`, keys from the environment, `satchel config` | Claude Code | Done 2026-11-16 | — |
+| 3 | Neutral message format in `core` (`Message` and its blocks) | Nayan | **Next** | Confirm A-04 |
+| 4 | `Provider` port, `ProviderEvent`, `Capabilities` in `core` | Nayan | Not started | Step 3; confirm A-05 (async), since it fixes the port's signature |
+| 5 | Scripted fake provider for tests | Claude Code | Blocked | Step 4 |
+| 6 | Event models and the core turn function | Nayan | Not started | Step 4 |
+| 7 | Anthropic adapter, then OpenAI-compatible adapter (Groq), with streaming | Nayan | Not started | Step 4; API keys; adds the `anthropic` and `openai` SDKs (S-02) |
+| 8 | Tracing to JSON Lines and sessions in SQLite | Claude Code | Blocked | Steps 3 and 6; confirm S-08 |
+| 9 | Rich + prompt_toolkit REPL, `satchel chat`, building a provider from the settings | Claude Code | Blocked | Steps 6 and 7; confirm S-04 before adding either library |
+| 10 | End-to-end test: core with the fake provider, no network, one trace file per session | Claude Code | Blocked | Steps 5, 6 and 8 |
+
+Questions to settle along the way:
+
+- **Who writes the event models (step 6)?** The scope above lists the event protocol but assigns it to nobody. They live in `core`.
+- **Who writes the `Tracer` and `SessionStore` port definitions (step 8)?** Under A-08 they live in `core`; the implementations in `tracing` and `storage` are Claude Code's.
+- **S-12** (`argparse` for the command line) is still marked Proposed although the CLI is built on it. Confirm it or replace it.
+- The first CI run on GitHub has not been checked from the development machine. Look at the Actions tab, and consider protecting `main` so pull requests need a passing run.
 
 ---
 

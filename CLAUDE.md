@@ -8,6 +8,8 @@ Satchel is a terminal assistant that answers from user-controlled knowledge base
 
 **Current state: early v0.** Tooling, CI, config loading (`src/satchel/config/`) and a thin CLI (`src/satchel/interface/cli.py`) exist. `core`, `providers`, `tracing` and `storage` are still empty packages. Almost everything in `docs/` describes the intended design, not existing code. Check what actually exists before assuming a module is there.
 
+**What is next:** the "v0 progress" table in `docs/ROADMAP.md` lists every v0 step with its owner, status and prerequisites. Read it at the start of a session and update it when a step starts or finishes. The next steps (message format, `Provider` port) are Nayan's.
+
 The design docs are the source of truth and should be read before non-trivial work:
 
 - `docs/VISION.md` — purpose, principles, non-goals
@@ -19,7 +21,7 @@ The design docs are the source of truth and should be read before non-trivial wo
 ## Standing rules
 
 1. **Keep the docs current.** When a change makes any doc (including this file) out of date, update it in the same piece of work.
-2. **Log the work.** Add an entry to `docs/PROJECT_LOG.md` for each piece of completed work, newest first, in the format that file describes.
+2. **Log the work.** Add an entry to `docs/PROJECT_LOG.md` for each piece of completed work, newest first, in the format that file describes, and update the "v0 progress" table in `docs/ROADMAP.md`.
 3. **No agent or RAG frameworks** (LangChain, LlamaIndex, LiteLLM, and similar). Libraries only for commodity parts (A-03, S-02).
 4. **No new dependency without an entry in `docs/DECISIONS.md`**, runtime or dev (A-07). Write the entry first, then add the package.
 5. **The core never imports from adapters or the interface.** `tests/test_architecture.py` enforces this; do not weaken that test to make code pass.

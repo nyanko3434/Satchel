@@ -21,6 +21,19 @@ Entry format:
 
 ---
 
+## 2026-11-16 — Docs brought up to date; README written
+
+**Version:** v0        **By:** Claude Code
+
+- Went through every doc against the state of the repository and corrected what had fallen behind.
+- Added a "v0 progress" table to the roadmap: ten steps with owner, status and what each one needs first, plus the questions still to settle in v0.
+- Wrote `README.md`, which had been empty: what Satchel is, its current state, how to set up for development, and where the docs are.
+- First piece of work done on a branch (`v0/docs-sync`) under P-08.
+
+**Decisions:** none.
+**Docs updated:** `README.md`, `ROADMAP.md` (v0 progress), `ARCHITECTURE.md` (status line, §10), `CLAUDE.md` (pointer to the progress table), this file.
+**Follow-ups:** the questions listed under "v0 progress" in the roadmap.
+
 ## 2026-11-16 — Branch workflow adopted
 
 **Version:** v0        **By:** Nayan (decision), Claude Code (recording it)
@@ -48,7 +61,7 @@ Entry format:
 **Follow-ups:**
 - Building a provider object from the settings comes with `satchel chat`, once the `Provider` port and adapters exist.
 - `recipes.toml` loading is v2.
-- The scaffolding commits were pushed, which triggers the first CI run; its result has not been checked from here. The commits for this entry and the ports entry are not pushed yet.
+- Everything up to this entry has been pushed to `main`. The result of the CI runs has not been checked from the development machine.
 
 ## 2026-11-16 — Ports live in the core
 
