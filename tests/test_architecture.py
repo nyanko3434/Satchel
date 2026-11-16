@@ -11,6 +11,7 @@ import pytest
 
 SRC = Path(__file__).resolve().parent.parent / "src"
 CORE = SRC / "satchel" / "core"
+CONFIG = SRC / "satchel" / "config"
 
 # Packages the core must not import: the interface and every adapter package.
 # Ports are defined in the core itself (decision A-08 in docs/DECISIONS.md), so
@@ -76,6 +77,31 @@ def test_core_does_not_import_adapters_or_interface() -> None:
     }
 
     assert not violations, f"core imports forbidden packages: {violations}"
+
+
+def test_config_imports_nothing_else_from_satchel() -> None:
+    """Settings are loaded at the edge and handed inward, so config stands alone."""
+    files = sorted(CONFIG.rglob("*.py"))
+    assert files, f"no Python files found under {CONFIG}"
+
+    violations = {
+        str(path.relative_to(SRC)): sorted(outside)
+        for path in files
+        if (
+            outside := {
+                name
+                for name in imported_modules(
+                    path.read_text(encoding="utf-8"),
+                    module_name(path),
+                    is_package=path.name == "__init__.py",
+                )
+                if (name == "satchel" or name.startswith("satchel."))
+                and not (name == "satchel.config" or name.startswith("satchel.config."))
+            }
+        )
+    }
+
+    assert not violations, f"config imports other satchel packages: {violations}"
 
 
 @pytest.mark.parametrize(
