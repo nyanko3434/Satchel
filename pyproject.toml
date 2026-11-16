@@ -1,17 +1,42 @@
 [project]
 name = "satchel"
 version = "0.1.0"
-description = "Add your description here"
+description = "A terminal assistant that answers from knowledge bases you control and carries out tasks on your machine, with your approval."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     { name = "nyanko3434", email = "khusunayan@gmail.com" }
 ]
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = []
 
 [project.scripts]
-satchel = "satchel:main"
+satchel = "satchel.interface.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.13.8,<0.14.0"]
 build-backend = "uv_build"
+
+[tool.ruff]
+target-version = "py312"
+# Code blocks in the design docs are sketches, not source to lint or format.
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "tests"]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.1",
+    "pytest>=9.2.0",
+    "ruff>=0.17.5",
+]
