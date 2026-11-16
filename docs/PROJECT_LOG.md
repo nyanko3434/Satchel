@@ -21,6 +21,18 @@ Entry format:
 
 ---
 
+## 2026-11-16 — Ports live in the core
+
+**Version:** v0        **By:** Nayan (decision), Claude Code (recording it)
+
+- Settled where the port `Protocol` classes live: in `core`, with adapter packages holding only implementations.
+- Extended the boundary test so `core` may not import `satchel.storage` or `satchel.tracing` either, in addition to `satchel.providers` and `satchel.interface`.
+- Confirmed TOML as the format for config and recipes.
+
+**Decisions:** A-08 added; O-09 resolved by A-08; S-09 moved from Proposed to Decided.
+**Docs updated:** `DECISIONS.md`, `ARCHITECTURE.md` (§2, §3, §10), this file.
+**Follow-ups:** where the knowledge base's own ports live is decided when v1 starts.
+
 ## 2026-11-16 — Project scaffolding for v0
 
 **Version:** v0 (setup)        **By:** Claude Code

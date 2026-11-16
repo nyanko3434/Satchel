@@ -14,6 +14,8 @@
 
 The core defines *ports* (Python `Protocol` classes). *Adapters* implement them. Dependencies point inward: adapters and interfaces import the core, and the core never imports an adapter.
 
+The `Protocol` classes themselves live in the `core` package, and adapter packages contain only implementations (decision A-08). Where the knowledge base's own ports live is decided in v1.
+
 ```
         ┌─────────────────────────────────────────────┐
         │                 Interfaces                  │
@@ -41,7 +43,7 @@ The core defines *ports* (Python `Protocol` classes). *Adapters* implement them.
 
 ## 3. Modules
 
-| Module | Responsibility | Port | First appears |
+| Module | Responsibility | Port it implements | First appears |
 |---|---|---|---|
 | `core` | Conversation state, the turn loop, prompt assembly, emitting events | — | v0 |
 | `providers` | Turn our message format into a provider's API call and back | `Provider` | v0 |
@@ -278,14 +280,14 @@ API keys are read from environment variables, not written to config files.
 
 ## 10. Proposed package layout
 
-The top level below is the repository root. As of 2026-11-16 the v0 packages exist as empty skeletons (`core`, `providers`, `interface`, `config`, `tracing`, `storage`); the rest are created in their version. Where the port `Protocol`s live is open question O-09.
+The top level below is the repository root. As of 2026-11-16 the v0 packages exist as empty skeletons (`core`, `providers`, `interface`, `config`, `tracing`, `storage`); the rest are created in their version. Ports are defined in `core` (A-08).
 
 ```
 satchel/
 ├── pyproject.toml
 ├── src/satchel/
-│   ├── core/          # engine, messages, events, prompts
-│   ├── providers/     # base port, anthropic, openai_compat
+│   ├── core/          # engine, messages, events, prompts, ports
+│   ├── providers/     # anthropic, openai_compat (implementations only)
 │   ├── kb/            # parsers, chunking, embedders, stores, manager
 │   ├── tools/         # registry, builtin tools, recipes, executor
 │   ├── permissions/   # tiers, rules, policy

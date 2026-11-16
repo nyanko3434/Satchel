@@ -28,6 +28,7 @@ Status values: **Decided** (agreed), **Proposed** (recommended, not yet confirme
 | A-05 | **Async** core (`asyncio`). | Fits streaming, the terminal UI and provider SDKs. | Proposed |
 | A-06 | Trace every step of every turn from v0. | Evaluation and debugging depend on it. | Decided |
 | A-07 | Few dependencies, each justified, pinned with a lockfile. | Smaller attack surface (a widely used LLM library had malicious releases on PyPI in March 2026) and easier maintenance. | Decided |
+| A-08 | **Ports live in `core`.** The `Protocol` classes are defined in the core, and adapter packages (`providers`, `storage`, `tracing`) hold only implementations. Applies now to `Provider`, `Tracer` and `SessionStore`. Where the knowledge base's own ports (`DocumentParser`, `Embedder`, `VectorStore`) sit is decided when v1 starts, because `kb` holds pipeline logic of its own and is not a plain adapter. | The `Provider` port refers to the core's `Message` and the core types against the port, so a port kept in `providers/` would make the two packages import each other. With ports in the core, every dependency points inward. Resolves O-09. | Decided (2026-11-16) |
 
 ## Stack
 
@@ -41,7 +42,7 @@ Status values: **Decided** (agreed), **Proposed** (recommended, not yet confirme
 | S-06 | Vector search: **hand-written NumPy** cosine search in v1, **LanceDB** later behind the same port. | A small knowledge base needs no index, and writing the search teaches retrieval. | Proposed |
 | S-07 | PDF parsing with **pypdf** first. pymupdf4llm only as an optional add-on. | pypdf is BSD-licensed. PyMuPDF and pymupdf4llm are AGPL, which complicates an MIT release. | Proposed |
 | S-08 | Sessions and metadata in **SQLite**; traces as **JSON Lines**. | No server to run; easy to inspect. | Proposed |
-| S-09 | **TOML** for config and recipes. | Parser is in the standard library; one format for everything. | Proposed |
+| S-09 | **TOML** for config and recipes. | Parser is in the standard library; one format for everything. | Decided (2026-11-16) |
 | S-10 | Evaluation metrics written by hand first; compare with DeepEval later. | Writing them is a learning goal. | Decided |
 | S-11 | Type checking with **mypy** in strict mode, as a dev dependency and in CI. | Pure Python, mature, and has an official Pydantic plugin, which matters with Pydantic models at every boundary. pyright pulls in a Node.js runtime; ty is younger and has no Pydantic plugin. | Decided (2026-11-16) |
 | S-12 | Command-line parsing with the standard library's **`argparse`**; no CLI framework. | No dependency (A-07). Revisit if `satchel kb ...` outgrows it. | Proposed (2026-11-16) |
@@ -94,4 +95,4 @@ Status values: **Decided** (agreed), **Proposed** (recommended, not yet confirme
 | O-06 | Which commands are on the read-only allowlist, and which patterns are privileged? | v2 |
 | O-07 | Is path-scoping for `run_command` worth real sandboxing? | v3 |
 | O-08 | MCP client support: worth adding, and when? | v3 |
-| O-09 | Where do the port `Protocol`s live? ARCHITECTURE.md §10 puts the base port in `providers/`, but the `Provider` port refers to the core's `Message`, and the core has to type against the port, so `core` and `providers` would import each other. Options: (a) ports live in `core`, and adapter packages hold only implementations; (b) each package keeps a `base` module that the core is allowed to import. Recommendation: (a). The boundary test in `tests/test_architecture.py` currently assumes (a) by forbidding all of `satchel.providers`. | Before the `Provider` port is written (v0) |
+| O-09 | Where do the port `Protocol`s live? ARCHITECTURE.md §10 puts the base port in `providers/`, but the `Provider` port refers to the core's `Message`, and the core has to type against the port, so `core` and `providers` would import each other. Options: (a) ports live in `core`, and adapter packages hold only implementations; (b) each package keeps a `base` module that the core is allowed to import. Recommendation: (a). The boundary test in `tests/test_architecture.py` currently assumes (a) by forbidding all of `satchel.providers`. **Resolved 2026-11-16: option (a), see A-08.** | Before the `Provider` port is written (v0) |

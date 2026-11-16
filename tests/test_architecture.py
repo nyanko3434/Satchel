@@ -12,9 +12,15 @@ import pytest
 SRC = Path(__file__).resolve().parent.parent / "src"
 CORE = SRC / "satchel" / "core"
 
-# Packages the core must not import. Revisit when O-09 in docs/DECISIONS.md
-# (where port Protocols live) is settled, and extend as adapter packages appear.
-FORBIDDEN = ("satchel.interface", "satchel.providers")
+# Packages the core must not import: the interface and every adapter package.
+# Ports are defined in the core itself (decision A-08 in docs/DECISIONS.md), so
+# the core never needs anything from these. Extend as adapter packages appear.
+FORBIDDEN = (
+    "satchel.interface",
+    "satchel.providers",
+    "satchel.storage",
+    "satchel.tracing",
+)
 
 
 def module_name(path: Path) -> str:
@@ -82,6 +88,8 @@ def test_core_does_not_import_adapters_or_interface() -> None:
         "from satchel.interface.cli import main",
         "from .. import providers",
         "from ..interface import cli",
+        "from satchel.storage import sessions",
+        "import satchel.tracing.jsonl",
         "def f():\n    from satchel.providers import x\n",
     ],
 )
