@@ -21,6 +21,25 @@ Entry format:
 
 ---
 
+## 2026-11-16 — Config loading
+
+**Version:** v0        **By:** Claude Code
+
+- Added the `config` package: `Paths` (XDG locations, computed without creating anything on disk), `Settings` and `ProviderSettings` (Pydantic models), `load_settings()` and `read_api_key()`.
+- Providers are named entries in `config.toml`, each with a `type`, a `model`, and optionally `base_url` and `api_key_env`; top-level `provider` selects the active one.
+- API keys are never stored in the settings. Only the name of the environment variable is, and the key is read when needed.
+- Config problems are reported as a single message naming the file and the field.
+- Added `satchel config`, which shows the loaded settings and file locations and reports each key variable only as set or not set, and a global `--config PATH` option.
+- Added pydantic as the first runtime dependency and enabled its mypy plugin.
+- Added tests for paths, loading, key lookup and the new command, plus a test that `config` imports nothing else from Satchel. 57 tests in total.
+
+**Decisions:** none new. pydantic is covered by S-01, TOML by S-09. XDG lookup is written by hand instead of adding `platformdirs` (A-07, P-04).
+**Docs updated:** `ARCHITECTURE.md` (§9: config schema and loader rules), `CLAUDE.md` (state, commands, config notes, commit rule), this file.
+**Follow-ups:**
+- Building a provider object from the settings comes with `satchel chat`, once the `Provider` port and adapters exist.
+- `recipes.toml` loading is v2.
+- The scaffolding commits were pushed, which triggers the first CI run; its result has not been checked from here. The commits for this entry and the ports entry are not pushed yet.
+
 ## 2026-11-16 — Ports live in the core
 
 **Version:** v0        **By:** Nayan (decision), Claude Code (recording it)

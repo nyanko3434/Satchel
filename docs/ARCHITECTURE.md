@@ -278,6 +278,50 @@ Following the XDG conventions on Linux:
 
 API keys are read from environment variables, not written to config files.
 
+The `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_STATE_HOME` and `XDG_CACHE_HOME` variables are honoured. `satchel --config PATH` uses a different config file, and `satchel config` shows what was loaded and where Satchel keeps its files.
+
+### `config.toml`
+
+```toml
+provider = "groq"            # the active one
+
+[providers.claude]
+type = "anthropic"
+model = "<model id>"
+api_key_env = "ANTHROPIC_API_KEY"
+
+[providers.groq]
+type = "openai_compat"
+model = "<model id>"
+base_url = "https://api.groq.com/openai/v1"
+api_key_env = "GROQ_API_KEY"
+
+[providers.local]
+type = "openai_compat"
+model = "<model id>"
+base_url = "http://localhost:11434/v1"
+```
+
+| Field | Rule |
+|---|---|
+| `provider` | Optional. If set, it must name an entry under `providers`. |
+| `providers.<name>.type` | Required. Which adapter to use: `"anthropic"` or `"openai_compat"`. |
+| `providers.<name>.model` | Required. There is no built-in default, so no model ID goes stale in the code. |
+| `providers.<name>.base_url` | Optional. |
+| `providers.<name>.api_key_env` | Optional. The *name* of the environment variable that holds the key. A local server needs none. |
+
+Providers are named entries so that one `openai_compat` adapter can serve Groq, OpenAI and a local server as separate entries, and switching is a one-line change.
+
+Rules the loader follows:
+
+- Unknown keys are errors, so a typo is reported instead of silently ignored.
+- A missing config file is not an error. It loads as "no providers configured", and the command that needs a provider says so.
+- The loaded settings never contain a key. A key is read from the environment at the moment it is needed, so it cannot leak through a settings dump or a trace.
+- Problems are reported as one message naming the file and the field, with no traceback.
+- The `config` package imports nothing else from Satchel. The command-line entry point loads the settings and hands each part what it needs.
+
+More settings are added when a feature needs them.
+
 ## 10. Proposed package layout
 
 The top level below is the repository root. As of 2026-11-16 the v0 packages exist as empty skeletons (`core`, `providers`, `interface`, `config`, `tracing`, `storage`); the rest are created in their version. Ports are defined in `core` (A-08).

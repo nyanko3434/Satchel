@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Satchel is a terminal assistant that answers from user-controlled knowledge bases (RAG) and carries out tasks on the user's machine with approval (tool-calling agent). It is a learning and portfolio project, built in versions: v0 skeleton → v1 RAG → v1.5 RAG evaluation → v2 agent → v3 extensions.
 
-**Current state: start of v0.** Tooling, CI and an empty package skeleton exist; the only real code is a stub CLI in `src/satchel/interface/cli.py`. Almost everything in `docs/` describes the intended design, not existing code. Check what actually exists before assuming a module is there.
+**Current state: early v0.** Tooling, CI, config loading (`src/satchel/config/`) and a thin CLI (`src/satchel/interface/cli.py`) exist. `core`, `providers`, `tracing` and `storage` are still empty packages. Almost everything in `docs/` describes the intended design, not existing code. Check what actually exists before assuming a module is there.
 
 The design docs are the source of truth and should be read before non-trivial work:
 
@@ -24,6 +24,7 @@ The design docs are the source of truth and should be read before non-trivial wo
 4. **No new dependency without an entry in `docs/DECISIONS.md`**, runtime or dev (A-07). Write the entry first, then add the package.
 5. **The core never imports from adapters or the interface.** `tests/test_architecture.py` enforces this; do not weaken that test to make code pass.
 6. **Read `docs/ARCHITECTURE.md` before structural changes** (new packages, moved modules, new ports, changed boundaries), and update it if the structure changes.
+7. **Commit finished work on `main` in small logical commits, and do not push.** "Finished" means the four checks pass and the docs and project log are updated. Nayan pushes.
 
 ## Who writes what (decision P-06)
 
@@ -45,7 +46,7 @@ Do not implement a "Nayan writes" part unless explicitly asked to. For those par
 
 The uv project is at the repo root (`pyproject.toml`, `uv.lock`, `src/satchel/`, `tests/`), with the design docs in `docs/` and the virtualenv in `.venv/`.
 
-Packages under `src/satchel/` that exist so far, all empty apart from a docstring unless noted: `core`, `providers`, `interface` (has `cli.py`), `config`, `tracing`, `storage`. `kb`, `tools`, `permissions` and `eval` are created in their own versions, not before.
+Packages under `src/satchel/` that exist so far: `config` (settings, XDG paths, loader) and `interface` (`cli.py`) have code; `core`, `providers`, `tracing` and `storage` are empty apart from a docstring. `kb`, `tools`, `permissions` and `eval` are created in their own versions, not before.
 
 ## Commands
 
@@ -54,6 +55,8 @@ Run from the repo root. Package management is uv; the supported floor is Python 
 ```bash
 uv sync                                   # install from the lockfile
 uv run satchel --version                  # run the CLI
+uv run satchel config                     # show loaded settings and file locations
+uv run satchel --config PATH config       # same, for a config file other than the XDG one
 uv run pytest                             # all tests
 uv run pytest tests/test_cli.py           # one file
 uv run pytest tests/test_cli.py::test_chat_is_a_stub_for_now   # one test
@@ -71,7 +74,7 @@ ruff skips Markdown files on purpose: the code blocks in the design docs are ske
 
 ## Architecture (intended)
 
-Ports and adapters. The core defines ports as Python `Protocol` classes; adapters implement them. **Dependencies point inward: adapters and interfaces import the core, and the core never imports an adapter.**
+Ports and adapters. The core defines ports as Python `Protocol` classes; adapters implement them. **Dependencies point inward: adapters and interfaces import the core, and the core never imports an adapter.** The `Protocol` classes are defined inside `core`, and `providers`, `storage` and `tracing` hold only implementations (A-08).
 
 - **Core ↔ interface boundary.** The interface never calls a model or a tool. It sends user input to the core and consumes a stream of events (`TextDelta`, `SourcesFound`, `ToolCallRequested`, `PermissionRequired`, `ToolStarted`/`ToolFinished`, `TerminalHandoff`, `TurnCompleted`, `ErrorRaised`), answering `PermissionRequired` with a `PermissionDecision`. Events are plain Pydantic data so a different front end can replace the terminal UI.
 - **One provider-neutral message format.** The core uses a single `Message` type with text, tool-call and tool-result blocks. Each provider adapter (Anthropic; OpenAI-compatible, Groq first) translates both ways, using the official SDKs behind the `Provider` port. Adapters expose `Capabilities` so the core can handle models that lack reliable tool calling.
@@ -82,6 +85,13 @@ Ports and adapters. The core defines ports as Python `Protocol` classes; adapter
 Planned cross-cutting choices: async core (`asyncio`), Pydantic models at boundaries, unit tests using fakes for the ports plus a few end-to-end tests with a scripted fake provider and no network.
 
 Runtime data follows XDG: config and recipes in `~/.config/satchel/`, knowledge bases and SQLite sessions in `~/.local/share/satchel/`, traces in `~/.local/state/satchel/traces/`, embedding models in `~/.cache/satchel/`. API keys come from environment variables and are never written to config.
+
+**Config (built).** `config.toml` holds named provider entries, each with a `type` (`anthropic` or `openai_compat`), a `model`, and optionally `base_url` and `api_key_env`; top-level `provider` selects the active one (schema in `ARCHITECTURE.md` §9). Things to preserve when touching it:
+
+- `Settings` never holds a key, only the name of the environment variable. Keys are read on demand with `read_api_key()`.
+- The `config` package imports nothing else from `satchel` (enforced by `tests/test_architecture.py`). The CLI is the composition root: it loads settings and passes them inward.
+- Functions take `env` and `home` as parameters instead of reading `os.environ` or `Path.home()` themselves; only `cli.main()` supplies the real ones. Tests pass fakes and never touch the real home directory.
+- User-facing config problems are raised as `ConfigError` with a complete message; the CLI prints it and exits with code 2.
 
 ## Safety invariants
 
