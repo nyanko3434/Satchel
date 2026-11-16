@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Satchel is a terminal assistant that answers from user-controlled knowledge bases (RAG) and carries out tasks on the user's machine with approval (tool-calling agent). It is a learning and portfolio project, built in versions: v0 skeleton → v1 RAG → v1.5 RAG evaluation → v2 agent → v3 extensions.
 
-**Current state: pre-v0.** The only code is the `uv init` stub in `satchel/src/satchel/__init__.py`. Almost everything in `docs/` describes the intended design, not existing code. Check what actually exists before assuming a module is there.
+**Current state: start of v0.** Tooling, CI and an empty package skeleton exist; the only real code is a stub CLI in `src/satchel/interface/cli.py`. Almost everything in `docs/` describes the intended design, not existing code. Check what actually exists before assuming a module is there.
 
 The design docs are the source of truth and should be read before non-trivial work:
 
@@ -14,6 +14,16 @@ The design docs are the source of truth and should be read before non-trivial wo
 - `docs/ARCHITECTURE.md` — modules, ports, events, on-disk layout
 - `docs/ROADMAP.md` — scope and "done when" per version, and who writes each part
 - `docs/DECISIONS.md` — decision log with IDs (A-01, S-02, …) and open questions
+- `docs/PROJECT_LOG.md` — dated log of work done
+
+## Standing rules
+
+1. **Keep the docs current.** When a change makes any doc (including this file) out of date, update it in the same piece of work.
+2. **Log the work.** Add an entry to `docs/PROJECT_LOG.md` for each piece of completed work, newest first, in the format that file describes.
+3. **No agent or RAG frameworks** (LangChain, LlamaIndex, LiteLLM, and similar). Libraries only for commodity parts (A-03, S-02).
+4. **No new dependency without an entry in `docs/DECISIONS.md`**, runtime or dev (A-07). Write the entry first, then add the package.
+5. **The core never imports from adapters or the interface.** `tests/test_architecture.py` enforces this; do not weaken that test to make code pass.
+6. **Read `docs/ARCHITECTURE.md` before structural changes** (new packages, moved modules, new ports, changed boundaries), and update it if the structure changes.
 
 ## Who writes what (decision P-06)
 
@@ -27,36 +37,37 @@ Do not implement a "Nayan writes" part unless explicitly asked to. For those par
 ## Working rules from the design docs
 
 - **Decisions come first.** Record a design decision in `docs/DECISIONS.md` before implementing it. Add or supersede entries; never rewrite history. Entries marked *Proposed* are not yet confirmed, so raise them rather than treating them as settled.
-- **No agent or RAG frameworks** (LangChain, LlamaIndex, LiteLLM, and similar). Libraries only for commodity parts (A-03, S-02).
-- **Every dependency must be justified in `DECISIONS.md`** and pinned through the lockfile (A-07). Do not add one casually.
+- **Dependencies are pinned** through `uv.lock`, which is committed (A-07).
 - **Linux only** for now, with nothing distribution-specific hard-coded (P-04). Environment details are detected at runtime.
 - MIT licence constrains dependencies: AGPL libraries such as PyMuPDF/pymupdf4llm can only be optional add-ons (S-07).
 
 ## Repository layout
 
-The uv project lives in the `satchel/` subdirectory, not the repo root. `docs/` and `LICENSE` are at the root. (`ARCHITECTURE.md` §10 sketches a layout with `pyproject.toml` at the top level; the actual layout differs.)
+The uv project is at the repo root (`pyproject.toml`, `uv.lock`, `src/satchel/`, `tests/`), with the design docs in `docs/` and the virtualenv in `.venv/`.
 
-```
-docs/                    design documents
-satchel/pyproject.toml   the Python project (uv, uv_build backend)
-satchel/src/satchel/     package source
-.venv/                   virtualenv at the repo root, with satchel installed editable
-```
-
-`satchel/` is currently untracked in git, and there is no `.gitignore` yet.
+Packages under `src/satchel/` that exist so far, all empty apart from a docstring unless noted: `core`, `providers`, `interface` (has `cli.py`), `config`, `tracing`, `storage`. `kb`, `tools`, `permissions` and `eval` are created in their own versions, not before.
 
 ## Commands
 
-Python 3.14 (`requires-python = ">=3.14"`; the docs say 3.12+, the pyproject is stricter). Package management is uv.
+Run from the repo root. Package management is uv; the supported floor is Python 3.12 and development uses 3.14 (S-13).
 
 ```bash
-.venv/bin/satchel                 # run the CLI entry point (satchel:main)
-cd satchel && uv add <package>    # add a dependency (justify it in DECISIONS.md first)
+uv sync                                   # install from the lockfile
+uv run satchel --version                  # run the CLI
+uv run pytest                             # all tests
+uv run pytest tests/test_cli.py           # one file
+uv run pytest tests/test_cli.py::test_chat_is_a_stub_for_now   # one test
+uv run pytest -k checker                  # tests matching a keyword
+uv run ruff check .                       # lint (add --fix to apply fixes)
+uv run ruff format .                      # format (CI runs --check)
+uv run mypy                               # strict type check of src/ and tests/
+uv add <package>                          # runtime dependency: DECISIONS.md entry first
+uv add --dev <package>                    # dev dependency: DECISIONS.md entry first
 ```
 
-The virtualenv is at the repo root while the project is in `satchel/`, so a bare `uv run` inside `satchel/` will create a second `.venv` there. Use `uv run --active` with the root venv activated, or call `.venv/bin/...` directly.
+CI (`.github/workflows/ci.yml`) runs ruff check, ruff format --check, mypy and pytest on Python 3.12 and 3.14. All four must pass locally before work is called done. Python 3.12 is not installed on the development machine, so 3.12 compatibility is checked only in CI; avoid syntax and stdlib features newer than 3.12.
 
-ruff and pytest are the chosen tools (S-01) but are **not installed or configured yet**; there are no tests, lint config, or CI. Setting them up is part of v0 scaffolding. Update this section with the real commands, including how to run a single test, once they exist.
+ruff skips Markdown files on purpose: the code blocks in the design docs are sketches.
 
 ## Architecture (intended)
 

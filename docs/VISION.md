@@ -1,7 +1,7 @@
 # Satchel — Vision
 
 > Status: initial vision, written 2026-11-11. This is a living document; update it when the direction changes.
-> Related docs: [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), [DECISIONS.md](DECISIONS.md)
+> Related docs: [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), [DECISIONS.md](DECISIONS.md), [PROJECT_LOG.md](PROJECT_LOG.md)
 
 ## In one sentence
 

@@ -1,7 +1,7 @@
 # Satchel — Roadmap
 
 > Status: initial plan, written 2026-11-11. Durations are rough estimates at about 15 hours a week; there is no deadline.
-> Related docs: [VISION.md](VISION.md), [ARCHITECTURE.md](ARCHITECTURE.md), [DECISIONS.md](DECISIONS.md)
+> Related docs: [VISION.md](VISION.md), [ARCHITECTURE.md](ARCHITECTURE.md), [DECISIONS.md](DECISIONS.md), [PROJECT_LOG.md](PROJECT_LOG.md)
 
 Each version ends with something that works and can be shown. "You write" marks the parts Nayan implements by hand; "Claude Code writes" marks supporting work.
 
@@ -138,7 +138,8 @@ Not committed. Pick based on what v2 teaches.
 
 ## Before starting v0
 
-- [ ] Check that the name `satchel` is free on PyPI and GitHub; choose a fallback package name if not.
-- [ ] Create the repository and copy these documents into `docs/`.
-- [ ] Write a `CLAUDE.md` for Claude Code that points to these documents and states the "who writes what" split.
+- [x] Check that the name `satchel` is free on PyPI and GitHub. Done 2026-11-16: the PyPI name is taken (see O-01 in [DECISIONS.md](DECISIONS.md)).
+- [ ] Choose a fallback PyPI distribution name. Not needed until publishing (v3).
+- [x] Create the repository and copy these documents into `docs/`.
+- [x] Write a `CLAUDE.md` for Claude Code that points to these documents and states the "who writes what" split.
 - [ ] Get API keys for Claude and Groq.

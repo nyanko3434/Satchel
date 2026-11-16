@@ -1,7 +1,7 @@
 # Satchel — Decision Log
 
 > Started 2026-11-11. Add a new entry whenever a decision is made or changed; do not rewrite history, supersede it.
-> Related docs: [VISION.md](VISION.md), [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md)
+> Related docs: [VISION.md](VISION.md), [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), [PROJECT_LOG.md](PROJECT_LOG.md)
 
 Status values: **Decided** (agreed), **Proposed** (recommended, not yet confirmed), **Open** (needs a decision).
 
@@ -9,7 +9,7 @@ Status values: **Decided** (agreed), **Proposed** (recommended, not yet confirme
 
 | ID | Decision | Why | Status |
 |---|---|---|---|
-| P-01 | The project is named **Satchel**. | It carries your knowledge and your tools. | Decided (PyPI and GitHub availability not yet checked) |
+| P-01 | The project is named **Satchel**. | It carries your knowledge and your tools. | Decided (availability checked 2026-11-16; the PyPI name is taken, see O-01) |
 | P-02 | It is a learning and portfolio project that other people can install and use. | Sets the quality bar: real packaging, docs and tests. | Decided |
 | P-03 | Open source under the **MIT** licence. | Permissive and simple. | Decided |
 | P-04 | **Linux only** at first; other platforms later. | Keeps v0–v2 focused. Nothing distribution-specific is hard-coded. | Decided |
@@ -43,6 +43,9 @@ Status values: **Decided** (agreed), **Proposed** (recommended, not yet confirme
 | S-08 | Sessions and metadata in **SQLite**; traces as **JSON Lines**. | No server to run; easy to inspect. | Proposed |
 | S-09 | **TOML** for config and recipes. | Parser is in the standard library; one format for everything. | Proposed |
 | S-10 | Evaluation metrics written by hand first; compare with DeepEval later. | Writing them is a learning goal. | Decided |
+| S-11 | Type checking with **mypy** in strict mode, as a dev dependency and in CI. | Pure Python, mature, and has an official Pydantic plugin, which matters with Pydantic models at every boundary. pyright pulls in a Node.js runtime; ty is younger and has no Pydantic plugin. | Decided (2026-11-16) |
+| S-12 | Command-line parsing with the standard library's **`argparse`**; no CLI framework. | No dependency (A-07). Revisit if `satchel kb ...` outgrows it. | Proposed (2026-11-16) |
+| S-13 | The supported floor is **Python 3.12** (`requires-python = ">=3.12"`); development uses 3.14 and CI tests both. | Confirms S-01 after `uv init` had defaulted the project to 3.14 only. A lower floor lets more people install it and is safer for the ML dependencies coming in v1. | Decided (2026-11-16) |
 
 ## Knowledge base
 
@@ -83,7 +86,7 @@ Status values: **Decided** (agreed), **Proposed** (recommended, not yet confirme
 
 | ID | Question | Needed by |
 |---|---|---|
-| O-01 | Is `satchel` free on PyPI and GitHub? If not, what is the package name? | Before v0 |
+| O-01 | Is `satchel` free on PyPI and GitHub? If not, what is the package name? **Checked 2026-11-16:** the PyPI name `satchel` is taken by an unrelated placeholder project (one release, 1.0, no files, "Planning" status). The GitHub repository exists at `nyanko3434/Satchel`; other unrelated projects share the name, none of them a Python assistant. Still open: the PyPI distribution name (a fallback such as a suffixed name, or a PEP 541 request for the abandoned name). The import name and the `satchel` command can stay as they are. | Before publishing to PyPI (v3); does not block v0, since installing from the Git repository works |
 | O-02 | Which embedding model becomes the default? | v1.5, decided by evaluation |
 | O-03 | Which chunking strategy and sizes? | v1, revisited in v1.5 |
 | O-04 | In v2, is retrieval only a tool, or is "always retrieve" kept as a mode? | v2, decided by evaluation |
@@ -91,3 +94,4 @@ Status values: **Decided** (agreed), **Proposed** (recommended, not yet confirme
 | O-06 | Which commands are on the read-only allowlist, and which patterns are privileged? | v2 |
 | O-07 | Is path-scoping for `run_command` worth real sandboxing? | v3 |
 | O-08 | MCP client support: worth adding, and when? | v3 |
+| O-09 | Where do the port `Protocol`s live? ARCHITECTURE.md §10 puts the base port in `providers/`, but the `Provider` port refers to the core's `Message`, and the core has to type against the port, so `core` and `providers` would import each other. Options: (a) ports live in `core`, and adapter packages hold only implementations; (b) each package keeps a `base` module that the core is allowed to import. Recommendation: (a). The boundary test in `tests/test_architecture.py` currently assumes (a) by forbidding all of `satchel.providers`. | Before the `Provider` port is written (v0) |

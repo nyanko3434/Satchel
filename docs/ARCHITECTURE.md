@@ -1,7 +1,7 @@
 # Satchel — Architecture
 
 > Status: initial design, written 2026-11-11. Interfaces shown here are starting sketches, not final signatures. Expect this document to change as each version is built.
-> Related docs: [VISION.md](VISION.md), [ROADMAP.md](ROADMAP.md), [DECISIONS.md](DECISIONS.md)
+> Related docs: [VISION.md](VISION.md), [ROADMAP.md](ROADMAP.md), [DECISIONS.md](DECISIONS.md), [PROJECT_LOG.md](PROJECT_LOG.md)
 
 ## 1. Goals for the design
 
@@ -278,6 +278,8 @@ API keys are read from environment variables, not written to config files.
 
 ## 10. Proposed package layout
 
+The top level below is the repository root. As of 2026-11-16 the v0 packages exist as empty skeletons (`core`, `providers`, `interface`, `config`, `tracing`, `storage`); the rest are created in their version. Where the port `Protocol`s live is open question O-09.
+
 ```
 satchel/
 ├── pyproject.toml
@@ -303,5 +305,6 @@ satchel/
 - **Typed everywhere.** Pydantic models at boundaries, type checking in CI.
 - **Tests.** Unit tests for each module with fakes for the ports; a small set of end-to-end tests with a scripted fake provider.
 - **Dependencies.** Few, justified in [DECISIONS.md](DECISIONS.md), and pinned with a lockfile.
-- **Tooling.** Python 3.12+, uv, ruff, pytest.
+- **Tooling.** Python 3.12+ (developed on 3.14; CI tests both), uv, ruff, mypy (strict), pytest.
+- **Boundary check.** `tests/test_architecture.py` fails if anything under `core/` imports an adapter package or the interface.
 - **Distribution.** Installable with `uv tool install` or `pipx`. MIT licence. Linux first.
