@@ -21,6 +21,16 @@ Entry format:
 
 ---
 
+## 2026-11-16 — Branch workflow adopted
+
+**Version:** v0        **By:** Nayan (decision), Claude Code (recording it)
+
+- From here on, each piece of work is done on its own branch and reaches `main` through a pull request once CI passes. Everything up to and including config loading was committed directly to `main`.
+
+**Decisions:** P-08 added.
+**Docs updated:** `DECISIONS.md`, `CLAUDE.md` (standing rule 7), this file.
+**Follow-ups:** optionally protect `main` on GitHub so the rule is enforced there too.
+
 ## 2026-11-16 — Config loading
 
 **Version:** v0        **By:** Claude Code

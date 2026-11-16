@@ -16,6 +16,7 @@ Status values: **Decided** (agreed), **Proposed** (recommended, not yet confirme
 | P-05 | Build in versions: v0 skeleton, v1 RAG, v1.5 RAG evaluation, v2 agent, v3 extensions. | Each version works alone and teaches one topic. | Decided |
 | P-06 | Nayan writes the core by hand; Claude Code writes supporting parts. | The core is where the learning is. | Decided |
 | P-07 | About 15 hours a week, no deadline. | — | Decided |
+| P-08 | **One branch per piece of work**, named `<version>/<topic>`, merged into `main` through a pull request after CI passes. Claude Code commits and pushes its branches; Nayan opens the pull request and merges. Trivia (a typo, a one-line doc correction) may go straight to `main`. | CI is the only place Python 3.12 is tested, so it should gate `main` instead of running after the fact. Each hand-written core piece also gets one reviewable diff, and `main` always works. Replaces the earlier habit of committing everything directly to `main`. | Decided (2026-11-16) |
 
 ## Architecture
 

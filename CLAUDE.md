@@ -24,7 +24,7 @@ The design docs are the source of truth and should be read before non-trivial wo
 4. **No new dependency without an entry in `docs/DECISIONS.md`**, runtime or dev (A-07). Write the entry first, then add the package.
 5. **The core never imports from adapters or the interface.** `tests/test_architecture.py` enforces this; do not weaken that test to make code pass.
 6. **Read `docs/ARCHITECTURE.md` before structural changes** (new packages, moved modules, new ports, changed boundaries), and update it if the structure changes.
-7. **Commit finished work on `main` in small logical commits, and do not push.** "Finished" means the four checks pass and the docs and project log are updated. Nayan pushes.
+7. **One branch per piece of work; never push or merge to `main`** (P-08). Branch from an up-to-date `main`, named `<version>/<topic>` (for example `v0/tracing`). Commit in small logical commits. When the work is finished (the four checks pass, docs and project log updated), push the branch to `origin` and stop: Nayan opens the pull request, checks CI and merges. Code, tests, dependencies and design changes always go through a branch. Only trivia (a typo, a one-line doc correction) may be committed straight to `main`, and even then it is not pushed.
 
 ## Who writes what (decision P-06)
 
