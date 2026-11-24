@@ -21,6 +21,19 @@ Entry format:
 
 ---
 
+## 2026-11-24 — Desktop interaction levels added to the plan
+
+**Version:** v2, v3 (planning)        **By:** Nayan (scope and choices), Claude Code (recording it)
+
+- Recorded three levels of system interaction: commands, apps with their own control interface, and acting inside GUI apps. Levels 1 and 2 are v2 through `run_command` and recipes; level 3 is v3 or later.
+- Planned a `detach` option on `run_command` so GUI apps are launched by the executor without blocking the turn.
+- Set the rules for level 3 ahead of time: screen, accessibility-tree and clipboard reads always ask and are never remembered; desktop input is privileged; commands that run other commands are never read-only.
+- Noted that the v0 message format should leave room for image content in tool results.
+
+**Decisions:** A-09, T-08, T-09, X-08, X-09 added as Decided; T-10, T-11, X-10 added as Proposed; O-10 opened.
+**Docs updated:** `DECISIONS.md`, `ARCHITECTURE.md` (§5, §7), `ROADMAP.md` (v2 steps 6–7 and done-when, v3 list), `VISION.md`, `CLAUDE.md` (safety invariants), this file.
+**Follow-ups:** keep A-09 in mind when writing the message format (v0 step 3).
+
 ## 2026-11-16 — Docs brought up to date; README written
 
 **Version:** v0        **By:** Claude Code
