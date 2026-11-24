@@ -38,6 +38,8 @@ You describe what you want in plain language and Satchel works out what to do:
 
 It does this with a small set of general tools (run a command, read a file, edit a file, write a file, search the knowledge base), plus **recipes**: short config entries where you teach it a task it could not know by itself.
 
+That reaches anything a command can do, including apps with their own control interface (window manager, media player, audio, Wi-Fi). Acting inside a GUI app, by clicking, typing or reading the screen, comes later and goes through the same approvals.
+
 ### 3. Understands mixed requests
 
 From one prompt, Satchel should be able to tell whether you are:

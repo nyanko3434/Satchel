@@ -104,5 +104,7 @@ These are non-negotiable design constraints, and any code touching tools, comman
 - Risk tiers are assigned by rules in code, never by the model. Anything unrecognised defaults to asking (X-04).
 - File tools are scoped to the working directory unless the user allows more (X-03).
 - Knowledge-base content and command output are data, not instructions. Tool calls they provoke still go through the normal permission flow (X-05).
+- Commands that run other commands (`setsid`, `systemd-run`, `hyprctl dispatch exec`, `busctl call`, `gdbus call`) are never read-only (X-10).
+- Reading the screen, an accessibility tree or the clipboard always asks and is never remembered (X-08). Sending input to the desktop is privileged (X-09).
 - Recipe parameter values are shell-escaped before substitution.
 - The executor has a dry-run mode; evaluation must never touch the real system (X-07).

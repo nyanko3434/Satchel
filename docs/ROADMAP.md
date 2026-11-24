@@ -1,6 +1,6 @@
 # Satchel — Roadmap
 
-> Status: initial plan, written 2026-11-11; v0 progress last updated 2026-11-16. Durations are rough estimates at about 15 hours a week; there is no deadline.
+> Status: initial plan, written 2026-11-11; v0 progress last updated 2026-11-16; v2 and v3 desktop-interaction scope added 2026-11-24. Durations are rough estimates at about 15 hours a week; there is no deadline.
 > Related docs: [VISION.md](VISION.md), [ARCHITECTURE.md](ARCHITECTURE.md), [DECISIONS.md](DECISIONS.md), [PROJECT_LOG.md](PROJECT_LOG.md)
 
 Each version ends with something that works and can be shown. "You write" marks the parts Nayan implements by hand; "Claude Code writes" marks supporting work.
@@ -47,7 +47,7 @@ Update this table whenever a step starts or finishes. Each step is done on its o
 |---|---|---|---|---|
 | 1 | Project setup: uv, ruff, mypy, pytest, CI, package skeleton, boundary test | Claude Code | Done 2026-11-16 | — |
 | 2 | Config loading: XDG paths, `config.toml`, keys from the environment, `satchel config` | Claude Code | Done 2026-11-16 | — |
-| 3 | Neutral message format in `core` (`Message` and its blocks) | Nayan | **Next** | Confirm A-04 |
+| 3 | Neutral message format in `core` (`Message` and its blocks) | Nayan | **Next** | Confirm A-04; leave room for image content (A-09) |
 | 4 | `Provider` port, `ProviderEvent`, `Capabilities` in `core` | Nayan | Not started | Step 3; confirm A-05 (async), since it fixes the port's signature |
 | 5 | Scripted fake provider for tests | Claude Code | Blocked | Step 4 |
 | 6 | Event models and the core turn function | Nayan | Not started | Step 4 |
@@ -125,15 +125,15 @@ Built in this order, each step usable before the next:
 3. **Read-only tools.** `search_knowledge_base` and `read_file`. Retrieval becomes a tool; keep the v1 always-retrieve pipeline so the two approaches can be compared in evals.
 4. **Permissions.** Three tiers, rule-based classification, working-directory scope, approval prompts in the UI, remembered "always allow".
 5. **Changing tools.** `edit_file` (exact replacement, read-first, diff preview), `write_file`.
-6. **`run_command`.** Timeouts, output truncation, environment block, terminal handoff for interactive commands, dry-run mode.
-7. **Recipes.** User-defined tools from `recipes.toml`, with shell-escaped parameters.
+6. **`run_command`.** Timeouts, output truncation, environment block (including the desktop session, T-10), terminal handoff for interactive commands, detached launch for GUI apps (T-09), dry-run mode. This covers levels 1 and 2 of system interaction (T-08); see ARCHITECTURE.md §7.
+7. **Recipes.** User-defined tools from `recipes.toml`, with shell-escaped parameters. Recipes are the preferred route for level-2 apps (window manager, media, audio, network); a few example recipe files may ship as examples, not built-ins.
 8. **Agent evaluation.** A task set with expected tools and arguments; tool-selection accuracy, argument correctness, task success, unnecessary calls, correct refusals. Runs against the dry-run executor or a container.
 
 **You write:** the tool-calling path in the adapters, the agent loop, the tool descriptions and schemas, the permission rules, the agent metrics.
 **Claude Code writes:** the individual tool implementations, diff rendering, terminal handoff, recipe loading, the approval UI, tests.
 
 **Done when**
-- "install X", "open Y", "refresh the waybar" (via a recipe) and "change Z in this file" each produce the correct call, an approval prompt, and the correct result.
+- "install X", "open Y", "refresh the waybar" (via a recipe) and "change Z in this file" each produce the correct call, an approval prompt, and the correct result. "open Y" returns at once and the app keeps running after the command ends.
 - A mixed request ("what do my notes say about X, and add that to notes.md") is handled in one turn.
 - A request outside its capabilities gets a clear refusal.
 - No password ever passes through Satchel.
@@ -152,6 +152,7 @@ Not committed. Pick based on what v2 teaches.
 - More providers: Gemini, OpenAI, local models through Ollama, with capability flags.
 - Better PDF parsing (optional pymupdf4llm or Docling add-ons).
 - MCP client support, so existing MCP servers become tools.
+- Level-3 desktop interaction, acting inside GUI apps (T-08, O-10), in this order of preference: app-specific APIs and MCP servers (for example Playwright for the browser, which needs MCP client support); the accessibility tree through AT-SPI; screenshots plus a vision model, with input sent to the desktop. Each is a tool behind the existing port; needs image content in tool results (A-09) and the sensitive-read and desktop-input rules (X-08, X-09).
 - Planning for long multi-step tasks.
 - Sandboxed command execution.
 - A second interface (local API or web) to prove the boundary.

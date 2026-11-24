@@ -1,6 +1,6 @@
 # Satchel — Architecture
 
-> Status: initial design, written 2026-11-11; last updated 2026-11-16. Interfaces shown here are starting sketches, not final signatures, except where a section says the part is built. Expect this document to change as each version is built.
+> Status: initial design, written 2026-11-11; last updated 2026-11-24. Interfaces shown here are starting sketches, not final signatures, except where a section says the part is built. Expect this document to change as each version is built.
 > Related docs: [VISION.md](VISION.md), [ROADMAP.md](ROADMAP.md), [DECISIONS.md](DECISIONS.md), [PROJECT_LOG.md](PROJECT_LOG.md)
 
 ## 1. Goals for the design
@@ -98,6 +98,8 @@ class Provider(Protocol):
 
 `Capabilities` matters because models differ. A small local model may not support tool calling reliably, and the core needs to know that instead of failing in confusing ways.
 
+The format leaves room for **image content**, at least inside tool-result blocks, and `Capabilities` will later gain a `vision` flag (A-09). Nothing image-related is built before level-3 desktop interaction (§7), but adding it should not reshape `Message`.
+
 Planned adapters: Anthropic (Claude) and OpenAI-compatible (Groq first; the same adapter should later cover OpenAI, Ollama and other compatible servers by changing the base URL).
 
 ## 6. Knowledge base
@@ -185,7 +187,7 @@ How well this works is measured in the evaluation harness (faithfulness and corr
 
 The model never executes anything. It only produces a tool name and arguments; Satchel's code validates, asks and executes. Failures (invalid arguments, non-zero exit codes, denials) go back to the model as tool results so it can correct itself or explain.
 
-The **environment block** tells the model what it could not otherwise know: distribution, package manager, shell, working directory, desktop session. It is detected at runtime, never hard-coded.
+The **environment block** tells the model what it could not otherwise know: distribution, package manager, shell, working directory, desktop session (Wayland or X11, and the desktop or compositor, T-10). It is detected at runtime, never hard-coded.
 
 ### Anatomy of a tool
 
@@ -207,9 +209,26 @@ class Tool(Protocol):
 | `read_file` | Read a file | read-only |
 | `edit_file` | Replace an exact string in a file; the file must have been read first; a diff is shown | change |
 | `write_file` | Create or overwrite a file | change |
-| `run_command` | Run a shell command | change, or privileged by rule |
+| `run_command` | Run a shell command; `detach` starts a GUI app or other long-running program and returns at once | change, or privileged by rule |
 
 File tools are separate from `run_command` because they are easier to validate, scope and show as diffs than `sed` or `echo >` through a shell.
+
+Two practical points about `run_command`:
+
+- **GUI apps are launched detached** (T-09). Started as a normal child, a GUI app blocks the turn or closes when the command ends. With `detach`, the executor starts the process in its own session with its standard streams detached, returns "started, pid N" at once and applies no timeout. The model does not have to remember `setsid`; compositor-specific launchers such as `hyprctl dispatch exec` can still be recipes.
+- **Satchel sees exit codes and output, never the screen** (T-11). Tool descriptions steer the model towards commands that report their result, and towards checking afterwards (for example `pgrep`, or the compositor's window list) when a command reports nothing.
+
+### Levels of system interaction
+
+How far Satchel reaches into the desktop (T-08):
+
+| Level | What | How | When |
+|---|---|---|---|
+| 1 | Anything reachable by a command: installing packages, launching apps, editing files, services, `xdg-open` | `run_command` and the file tools | v2 |
+| 2 | Apps with their own control interface, driven without touching their window: `hyprctl` (windows, workspaces), `playerctl` (media), `wpctl`/`pactl` (audio), `nmcli` (Wi-Fi), `bluetoothctl`, `notify-send`, `wl-copy`/`wl-paste`, D-Bus through `busctl` or `gdbus` | `run_command`, and preferably recipes, because the model cannot know the user's exact setup | v2 |
+| 3 | Acting inside a GUI app: clicking, typing, reading the screen | Extra tools, in this order of preference (O-10): app-specific APIs and MCP servers (for example Playwright for the browser); the accessibility tree through AT-SPI; screenshots plus a vision model, with input sent to the desktop | v3 or later |
+
+The programs named are examples, not dependencies; which ones apply is known from the environment block (P-04). Every level-3 option is just another `Tool` behind the same port and permission flow, so the core needs no change beyond room for images in tool results (A-09). Two kinds of action get special permission rules (below): sensitive reads, which start at level 2 with the clipboard and grow at level 3 with the screen and accessibility tree, and desktop input.
 
 ### Recipes
 
@@ -239,15 +258,17 @@ Each recipe is registered as a tool with a generated schema. Parameter values ar
 |---|---|---|
 | Read-only | `read_file`, `search_knowledge_base`, a short allowlist of commands such as `ls`, `pwd`, `which` | Runs automatically |
 | Change | `edit_file`, `write_file`, most commands | Asks first; "always allow" can be remembered per tool or command pattern |
-| Privileged or destructive | anything with `sudo`, `rm -r`, package installs, writes outside the allowed paths | Always asks; never remembered |
+| Privileged or destructive | anything with `sudo`, `rm -r`, package installs, writes outside the allowed paths, sending input to the desktop (X-09), and sensitive reads, which change nothing but can expose anything: screen capture, dumping an app's accessibility tree, reading the clipboard (X-08) | Always asks; never remembered |
 
-The tier for a command is decided by rules in Satchel's code, not by the model. Anything unrecognised defaults to asking.
+The tier for a command is decided by rules in Satchel's code, not by the model. Anything unrecognised defaults to asking. Commands that run other commands (`setsid`, `systemd-run`, `hyprctl dispatch exec`, `busctl call`, `gdbus call`) are never read-only and are classified at least as strictly as what they run; query subcommands of level-2 tools (`playerctl status`, `wpctl get-volume`) can be read-only (X-10). Tools from MCP servers default to asking, like any unrecognised action.
+
+**Sensitive reads and desktop input.** The screen, an accessibility tree and the clipboard can show anything the user has open, including a password copied by a password manager (X-01). Reading them always asks, and when the provider is hosted the prompt says the data will be sent to it. What comes back is untrusted data like any other output. Sending keystrokes or clicks is privileged: input goes to whichever window has focus, which may be a terminal, and focus can change between approval and execution. Satchel never sets up input-injection access (for example `ydotool`'s uinput daemon) itself; the user opts in outside Satchel.
 
 **Scope.** File tools refuse paths outside the working directory unless the user has allowed more (in config or during the session). A shell command cannot be confined by path checks alone, so for `run_command` the protection is the approval step: every command that is not on the read-only allowlist is shown in full before it runs. Real sandboxing (for example bubblewrap or containers) is a later option.
 
 **Passwords.** Satchel never asks for, sees or stores a password. When a command is interactive (a sudo prompt, a confirmation), the core emits `TerminalHandoff`, the command runs attached to the real terminal, the user types what is needed, and the core receives only the exit code and captured output.
 
-**Untrusted text.** Knowledge-base content and command output are data, not instructions. If a document says "run this command", any resulting tool call still passes through the same permission flow. This is the main defence against prompt injection.
+**Untrusted text.** Knowledge-base content, command output and anything read from the screen are data, not instructions. If a document says "run this command", any resulting tool call still passes through the same permission flow. This is the main defence against prompt injection.
 
 **Dry run.** The executor has a dry-run mode that records what would have run without running it. It is used by the evaluation harness and is available to users.
 
